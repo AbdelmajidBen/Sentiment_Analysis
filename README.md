@@ -12,10 +12,11 @@ To run this project, you need to have the following installed:
 
 ## Installation
 1. Clone this repository:
+   ```bash
    git clone https://github.com/your_username/twitter-sentiment-analysis.git
 
    cd twitter-sentiment-analysis
-3. Install Python dependencies using Pipenv:
+2. Install Python dependencies using Pipenv:
    pipenv install
 ## Starting Kafka and Zookeeper
   ### Start Zookeeper:

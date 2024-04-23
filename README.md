@@ -34,11 +34,15 @@ To run this project, you need to have the following installed:
   2. Run the consumer script to start consuming tweets from the Kafka topic and perform sentiment analysis:
      
      python consumer.py
+     
   3. Execute the twitter_analysis.py script to preprocess data, train models, and make real-time predictions:
      
      python twitter_analysis.py
+     
   4. Execute the t1.py script to train a logistic regression model for sentiment analysis:
+     
      python t1.py
+     
 ## Author :
 Abdelmajid Benjelloun / Ayoub Bakkali / Salma Nidar 
 

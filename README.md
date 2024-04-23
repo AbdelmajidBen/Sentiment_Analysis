@@ -31,7 +31,7 @@ To run this project, you need to have the following installed:
   - t1.py: Python script containing the logistic regression model training code for sentiment analysis.
 ## Execution:
   1.  Run the producer script to start producing tweets to the Kafka topic:
-        ```bash
+     ```bash
      python producer.py
   2. Run the consumer script to start consuming tweets from the Kafka topic and perform sentiment analysis:
         ```bash

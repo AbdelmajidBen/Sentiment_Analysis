@@ -13,8 +13,9 @@ To run this project, you need to have the following installed:
 ## Installation
 1. Clone this repository:
    git clone https://github.com/your_username/twitter-sentiment-analysis.git
+   
    cd twitter-sentiment-analysis
-2. Install Python dependencies using Pipenv:
+3. Install Python dependencies using Pipenv:
    pipenv install
 ## Starting Kafka and Zookeeper
   ### Start Zookeeper:
@@ -28,10 +29,13 @@ To run this project, you need to have the following installed:
   - t1.py: Python script containing the logistic regression model training code for sentiment analysis.
 ## Execution:
   1.  Run the producer script to start producing tweets to the Kafka topic:
+     
      python producer.py
   2. Run the consumer script to start consuming tweets from the Kafka topic and perform sentiment analysis:
+     
      python consumer.py
   3. Execute the twitter_analysis.py script to preprocess data, train models, and make real-time predictions:
+     
      python twitter_analysis.py
   4. Execute the t1.py script to train a logistic regression model for sentiment analysis:
      python t1.py

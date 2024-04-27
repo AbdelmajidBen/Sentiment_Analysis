@@ -68,6 +68,7 @@ services:
       interval: 10s  # Check every 10 seconds
       timeout: 10s   # Timeout after 10 seconds
       retries: 5     # Retry 5 times before considering the service unhealthy
+    
 
 #
 # 3 service to create topics
@@ -109,7 +110,7 @@ services:
 
   zookeeper:
     image: zookeeper:3.7.2
-    environment:
+    environment: 
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
@@ -118,21 +119,45 @@ services:
       - spark_kafka
 
 
-#
+
 # Producers that send twitter_training.csv to kafka cluster
-#
+
 #
   producer:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: producer/Dockerfile1
     networks:
       - spark_kafka
     depends_on:
       - init-kafka1
       - init-kafka2
       - init-kafka3
+    volumes:
+      - zookeeper_data:/data
+
+
+  consumer:
+    build:
+      context: .
+      dockerfile: consumer/Dockerfile2
+    networks:
+      - spark_kafka
+    depends_on:
+      - init-kafka1
+      - init-kafka2
+      - init-kafka3   
+
+
+
+#
+# Spark consumer
+#
+#
 
 networks:
   spark_kafka:
     driver: bridge
+
+volumes:
+  zookeeper_data:

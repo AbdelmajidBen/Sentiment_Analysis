@@ -2,21 +2,22 @@ from kafka import KafkaProducer
 import csv
 import time
 
-producer = KafkaProducer(bootstrap_servers='kafka1:9092')
+# Initialize the Kafka producer with the bootstrap servers
+producer = KafkaProducer(bootstrap_servers='kafka1:9092, kafka2:9092, kafka3:9092')
+
+# Specify the CSV file and topic name
 csv_file = 'twitter_training.csv'
 topic_name = 'twitter'
-topic_name = topic_name.encode('utf-8')
+
 def send_data_to_kafka():
     with open(csv_file, 'r', encoding='utf-8') as file:
         reader = csv.reader(file)
         next(reader)  
         for row in reader:
-            tweet_id = row[0]  
-            title = row[1]  
-            sentiment = row[2]  
-            tweet_text = row[3] 
+            tweet_id, title, sentiment, tweet_text = row
             tweet_data = f"{tweet_id},{title},{sentiment},{tweet_text}"
-            producer.send('twitter_training', topic_name)
+            # Send the message to the specified topic
+            producer.send(topic_name, tweet_data.encode('utf-8'))
             time.sleep(0.1)  
             print("Tweet envoyé à Kafka:", tweet_data)
 

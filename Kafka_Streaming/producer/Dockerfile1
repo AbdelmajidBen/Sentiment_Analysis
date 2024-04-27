@@ -2,9 +2,8 @@ FROM python:3.8-slim
 
 WORKDIR /app
 
-COPY producer.py .
-COPY twitter_training.csv .
-
+COPY ./producer/producer.py .
+COPY ./producer/twitter_training.csv .
 RUN pip install kafka-python
 
 

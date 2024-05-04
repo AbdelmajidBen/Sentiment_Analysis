@@ -126,7 +126,7 @@ services:
   producer:
     build:
       context: .
-      dockerfile: producer/Dockerfile1
+      dockerfile: Kafka_Streaming/producer/Dockerfile1
     networks:
       - spark_kafka
     depends_on:
@@ -136,25 +136,50 @@ services:
     volumes:
       - zookeeper_data:/data
 
-
-  consumer:
-    build:
-      context: .
-      dockerfile: consumer/Dockerfile2
-    networks:
-      - spark_kafka
-    depends_on:
-      - init-kafka1
-      - init-kafka2
-      - init-kafka3   
-
-
-
 #
 # Spark consumer
 #
 #
 
+  spark:
+    build:
+      context: .
+      dockerfile: trainement/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - spark_kafka
+    depends_on:
+      - init-kafka1
+      - init-kafka2
+      - init-kafka3
+
+      
+  spark-worker:
+    image: docker.io/bitnami/spark:3.5
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    depends_on:
+      - spark
+    volumes:
+      - ./consumer/consumer.py:/root/consumer.py
+    networks:
+      - spark_kafka
+
+
+
+#
+# Network
+#
+ 
 networks:
   spark_kafka:
     driver: bridge

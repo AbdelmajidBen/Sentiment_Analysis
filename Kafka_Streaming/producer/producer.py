@@ -17,9 +17,10 @@ def send_data_to_kafka():
             tweet_id, title, sentiment, tweet_text = row
             tweet_data = f"{tweet_id},{title},{sentiment},{tweet_text}"
             # Send the message to the specified topic
-            producer.send(topic_name, tweet_data.encode('utf-8'))
+            # Send the message to the specified topic with a key
+            producer.send(topic_name, key=b'Tweet', value=tweet_text.encode('utf-8'))
             time.sleep(0.1)  
-            print("Tweet envoyé à Kafka:", tweet_data)
+#            print("Tweet envoyé à Kafka:", tweet_data.encode('utf-8'))
 
 if __name__ == "__main__":
     send_data_to_kafka()

@@ -23,7 +23,7 @@ COPY trainement/consumer.py /root/consumer.py
 
 
 # Set the entry point script
-# RUN chmod +x /entrypoint.sh
-#ENTRYPOINT ["/entrypoint.sh"]
 
-CMD [ "spark-submit","--packages" ,"org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.0" ,"/root/consumer.py" ]
+
+CMD /opt/bitnami/spark/sbin/start-master.sh & \
+    spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.0 /root/consumer.py

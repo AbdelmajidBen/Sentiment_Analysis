@@ -147,6 +147,7 @@ services:
       dockerfile: trainement/Dockerfile
     ports:
       - "8080:8080"
+      - "7077:7077"
     networks:
       - spark_kafka
     depends_on:

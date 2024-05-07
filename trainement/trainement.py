@@ -59,7 +59,7 @@ df_transformed = preprocessing_model.transform(df_twitter)
 # Specify the path where you want to save the model
 model_path = "preprocessing_pipeline1"
 # Save the preprocessing model
-preprocessing_model.save(model_path)
+#preprocessing_model.save(model_path)
 
 
 # Split the data into train and test sets

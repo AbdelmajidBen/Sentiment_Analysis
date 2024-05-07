@@ -4,7 +4,11 @@ USER root
 
 # Install the required package
 RUN /opt/bitnami/spark/bin/spark-shell --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.0
+RUN /opt/bitnami/spark/bin/spark-shell --packages org.mongodb.spark:mongo-spark-connector_2.12:3.0.0
+RUN pip install numpy
 
+COPY trainement/model/ /root/model
+COPY trainement/preprocessing_pipeline1 /root/pipeline
 
 ENV SPARK_MODE=master \
     SPARK_RPC_AUTHENTICATION_ENABLED=no \
@@ -26,4 +30,4 @@ COPY trainement/consumer.py /root/consumer.py
 
 
 CMD /opt/bitnami/spark/sbin/start-master.sh & \
-    spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.0 /root/consumer.py
+    spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.0,org.mongodb.spark:mongo-spark-connector_2.12:3.0.0 /root/consumer.py

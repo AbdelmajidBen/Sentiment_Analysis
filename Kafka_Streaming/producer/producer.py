@@ -6,7 +6,7 @@ import time
 producer = KafkaProducer(bootstrap_servers='kafka1:9092, kafka2:9092, kafka3:9092')
 
 # Specify the CSV file and topic name
-csv_file = 'twitter_training.csv'
+csv_file = 'twitter_validation.csv'
 topic_name = 'twitter'
 
 def send_data_to_kafka():

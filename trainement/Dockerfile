@@ -7,8 +7,13 @@ RUN /opt/bitnami/spark/bin/spark-shell --packages org.apache.spark:spark-sql-kaf
 RUN /opt/bitnami/spark/bin/spark-shell --packages org.mongodb.spark:mongo-spark-connector_2.12:3.0.0
 RUN pip install numpy
 
-COPY trainement/model/ /root/model
+
+COPY trainement/twitter_training.csv /root/twitter_training.csv
+#COPY trainement/model/ /root/model
 COPY trainement/preprocessing_pipeline1 /root/pipeline
+COPY trainement/trainement.py /root/trainement.py
+
+RUN spark-submit /root/trainement.py
 
 ENV SPARK_MODE=master \
     SPARK_RPC_AUTHENTICATION_ENABLED=no \

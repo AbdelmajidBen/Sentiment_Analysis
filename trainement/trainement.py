@@ -14,17 +14,17 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 # Read the CSV file into a DataFrame
-df_twitter = spark.read.csv("../twitter_training.csv", header=False, inferSchema=True)
+df_twitter = spark.read.csv("/root/twitter_training.csv", header=False, inferSchema=True)
 
 # Provide column names manually (replace with actual column names)
-columns = ["Tweet ID", "Entity", "Sentiment", "Tweet content"]
+columns = ["Tweet ID", "Entity", "Sentiment", "TweetContent"]
 df_twitter = df_twitter.toDF(*columns)
 
 # Drop the 'Tweet ID' column
 df_twitter = df_twitter.drop("Tweet ID")
 
 # Drop rows with null values in the 'Tweet content' column
-df_twitter = df_twitter.dropna(subset=["Tweet content"])
+df_twitter = df_twitter.dropna(subset=["TweetContent"])
 
 # Define the clean_and_lowercase function
 def clean_and_lowercase(text):
@@ -39,47 +39,40 @@ def clean_and_lowercase(text):
 clean_and_lowercase_udf = udf(clean_and_lowercase, StringType())
 
 # Apply the UDF to the 'Tweet content' column
-df_twitter = df_twitter.withColumn("cleaned_tweet", clean_and_lowercase_udf("Tweet content"))
+df_twitter = df_twitter.withColumn("cleaned_tweet", clean_and_lowercase_udf("TweetContent"))
 
-# Define preprocessing stages
+
 indexer = StringIndexer(inputCol="Sentiment", outputCol="label")
 tokenizer = Tokenizer(inputCol="cleaned_tweet", outputCol="tokens")
 stop_words_remover = StopWordsRemover(inputCol="tokens", outputCol="filtered_tweet")
 cv = CountVectorizer(inputCol="filtered_tweet", outputCol="raw_features")
 idf = IDF(inputCol="raw_features", outputCol="features")
 
-# Create a pipeline for preprocessing
-data_preprocessing_pipeline = Pipeline(stages=[indexer, tokenizer, stop_words_remover, cv, idf])
-
-# Fit the preprocessing pipeline to the data
-preprocessing_model = data_preprocessing_pipeline.fit(df_twitter)
-df_transformed = preprocessing_model.transform(df_twitter)
+# Add indexer, lemmatization, and the rest of the pipeline stages
+df_twitter = indexer.fit(df_twitter).transform(df_twitter)
 
 
-# Specify the path where you want to save the model
-model_path = "preprocessing_pipeline1"
-# Save the preprocessing model
-#preprocessing_model.save(model_path)
+train_data, test_data = df_twitter.randomSplit([0.8, 0.2], seed=42)
 
 
-# Split the data into train and test sets
-train_data, test_data = df_transformed.randomSplit([0.8, 0.2], seed=42)
+# Assuming you have defined tokenizer, stop_words_remover, cv, idf, train_data, and test_data earlier in your code
 
-# Create a LinearSVC classifier
+# Create a LinearSVC object
 svm = LinearSVC(maxIter=10, regParam=0.1, featuresCol="features", labelCol="label")
 
-# Create an OneVsRest classifier
+# Create an OneVsRest object
 ovr = OneVsRest(classifier=svm)
 
-# Train the OneVsRest model
-ovr_model = ovr.fit(train_data)
+# Create a Pipeline for data preprocessing and classification
+data_preprocessing_pipeline = Pipeline(stages=[tokenizer, stop_words_remover, cv, idf, ovr])
 
-# Make predictions on the test data
-predictions = ovr_model.transform(test_data)
+# Fit the pipeline to the training data
+pipeline_model = data_preprocessing_pipeline.fit(train_data)
 
-# Evaluate the model
-evaluator = MulticlassClassificationEvaluator(labelCol="label", predictionCol="prediction", metricName="accuracy")
-accuracy = evaluator.evaluate(predictions)
-print("Accuracy SVM:", accuracy)
+
+model_path = "/root/model"
+pipeline_model.save(model_path)
+
+
 
 spark.stop()

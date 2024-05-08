@@ -37,11 +37,11 @@ df = spark \
 df = df.withColumn("key", expr("string(key)"))
 
 # Decode the value column into strings if it's a string
-df = df.withColumn("Tweet content", expr("string(value)")).drop("value")
+df = df.withColumn("TweetContent", expr("string(value)")).drop("value")
 
 clean_and_lowercase_udf = udf(clean_and_lowercase, StringType())
 
-df = df.withColumn("cleaned_tweet", clean_and_lowercase_udf("Tweet content"))
+df = df.withColumn("cleaned_tweet", clean_and_lowercase_udf("TweetContent"))
 
 # Define the function to apply transformations inside foreachBatch
 def process_batch(df, epoch_id):
@@ -49,7 +49,7 @@ def process_batch(df, epoch_id):
     transformed_df = pipeline.transform(df)
     
     # Write the transformed data to MongoDB
-    transformed_df.select("prediction", "Tweet content").write \
+    transformed_df.select("prediction", "TweetContent").write \
         .format("com.mongodb.spark.sql.DefaultSource") \
         .mode("append") \
         .option("uri", "mongodb://admin:1234@mongodb:27017") \

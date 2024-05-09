@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'bgd',
     'djongo'
+
 ]
 
 MIDDLEWARE = [
@@ -78,10 +79,16 @@ WSGI_APPLICATION = 'bigdata.wsgi.application'
 DATABASES = {
       'default': {
           'ENGINE': 'djongo',
-          'NAME': 'tweets',
+          'NAME': 'Twitter',
           'ENFORCE_SCHEMA': False,
-      }
-  }
+          'CLIENT': {
+            'host': 'localhost:27017',
+            'username': 'admin',
+            'password': '1234',
+            #'authSource': 'your_authentication_database',
+            }
+        }
+}
 
 
 # Database

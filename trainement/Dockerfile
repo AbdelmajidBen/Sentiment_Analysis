@@ -5,7 +5,7 @@ USER root
 # Install the required package
 RUN /opt/bitnami/spark/bin/spark-shell --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.0
 RUN /opt/bitnami/spark/bin/spark-shell --packages org.mongodb.spark:mongo-spark-connector_2.12:3.0.0
-RUN pip install numpy
+RUN pip install numpy pandas
 
 
 COPY trainement/twitter_training.csv /root/twitter_training.csv

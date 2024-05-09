@@ -1,8 +1,9 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import expr
+from pyspark.sql.functions import expr, current_timestamp
 from pyspark.ml import PipelineModel
 from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
+from pyspark.ml.functions import vector_to_array  # Import added
 import re
 
 # Model and pipeline PATH
@@ -48,8 +49,14 @@ def process_batch(df, epoch_id):
     # Apply transformations to the DataFrame
     transformed_df = pipeline.transform(df)
     
+    # Add timestamp column
+    transformed_df = transformed_df.withColumn("timestamp", current_timestamp())
+    
+    # Convert rawPrediction column to array
+    transformed_df = transformed_df.withColumn("rawPredictionArray", vector_to_array("rawPrediction"))
+    
     # Write the transformed data to MongoDB
-    transformed_df.select("prediction", "TweetContent").write \
+    transformed_df.select("timestamp", "prediction", "TweetContent", "rawPredictionArray").write \
         .format("com.mongodb.spark.sql.DefaultSource") \
         .mode("append") \
         .option("uri", "mongodb://admin:1234@mongodb:27017") \

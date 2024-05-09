@@ -52,22 +52,21 @@
     
     <h1 class="tweetstitle">Tweets recu de Mongo DB </h1>
     <div class="container">
-        <table border="1">
+        <table class="table table">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Company</th>
-                    <th>Sentiment</th>
-                    <th>Tweet</th>
+                    <th scope="col">TimeStamp</th>
+                    <th scope="col">Tweet</th>
+                    <th scope="col">Prediction</th>
                 </tr>
             </thead>
             <tbody>
                 {% for tweet in tweets %}
                 <tr>
-                    <td>{{ tweet.ID }}</td>
-                    <td>{{ tweet.company }}</td>
-                    <td>{{ tweet.Sentiment }}</td>
-                    <td>{{ tweet.tweet }}</td>
+                    <td scope="row"> {{ tweet.timestamp }}</td>
+                    <td scope="row"> {{tweet.TweetContent}} </td>
+                    <td scope="row">{{ tweet.prediction }}</td>
+                    
                 </tr>
                 {% endfor %}
             </tbody>

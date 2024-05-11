@@ -19,6 +19,9 @@ def dashboard(request):
     predictions = []
     confidence = []  # New list to store maximum predictions
     
+    cpu_usages = []  # List to store CPU usage
+    memory_usages = []  # List to store memory usage
+
     for tweet in tweets:
         timestamps.append(tweet.timestamp)
         predictions.append(tweet.prediction)
@@ -26,6 +29,8 @@ def dashboard(request):
         # Assuming tweet.rawPredictionArray is the array of predictions
         
         confidence.append(max(tweet.rawPredictionArray))
+        cpu_usages.append(tweet.cpu_usage)
+        memory_usages.append(tweet.memory_usage)
         
     
 
@@ -86,9 +91,30 @@ def dashboard(request):
     # Encode the line plot as a base64 string
     line_graphic = base64.b64encode(line_image_png)
     line_graphic = line_graphic.decode('utf-8')
+    
+    
+    # Create the line plot for CPU and memory usage over time
+    plt.figure(figsize=(10, 6))
+    plt.plot(timestamps[-100:], cpu_usages[-100:], color='blue', marker='o', linestyle='-', label='CPU Usage')
+    plt.plot(timestamps[-100:], memory_usages[-100:], color='green', marker='o', linestyle='-', label='Memory Usage')
+    plt.xlabel('Timestamp')
+    plt.ylabel('Usage (%)')
+    plt.title('CPU and Memory Usage over Time')
+    plt.legend()
+
+    # Convert the line plot to a bytes object
+    cpu_memory_usage_buffer = BytesIO()
+    plt.savefig(cpu_memory_usage_buffer, format='png')
+    cpu_memory_usage_buffer.seek(0)
+    cpu_memory_usage_png = cpu_memory_usage_buffer.getvalue()
+    plt.close()
+
+    # Encode the line plot as a base64 string
+    cpu_memory_graphic = base64.b64encode(cpu_memory_usage_png)
+    cpu_memory_graphic = cpu_memory_graphic.decode('utf-8')
 
     # Pass the base64 strings of all plots to the template
-    return render(request, 'dashboard.html', {'pie_graphic': pie_graphic, 'plot_graphic': plot_graphic, 'line_graphic': line_graphic})
+    return render(request, 'dashboard.html', {'pie_graphic': pie_graphic, 'plot_graphic': plot_graphic, 'line_graphic': line_graphic, "cpu_memory_graphic":cpu_memory_graphic})
 
 def architecture(request):
     return render(request, 'architecture.html')

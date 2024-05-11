@@ -5,6 +5,9 @@ from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
 from pyspark.ml.functions import vector_to_array  # Import added
 import re
+from pyspark.sql.functions import lit
+import psutil  # Import the psutil library for system monitoring
+
 
 # Model and pipeline PATH
 model_path = "/root/model"
@@ -44,8 +47,16 @@ clean_and_lowercase_udf = udf(clean_and_lowercase, StringType())
 
 df = df.withColumn("cleaned_tweet", clean_and_lowercase_udf("TweetContent"))
 
+def get_system_usage():
+    cpu_usage = psutil.cpu_percent()
+    memory_usage = psutil.virtual_memory().percent
+    return cpu_usage, memory_usage
+
 # Define the function to apply transformations inside foreachBatch
 def process_batch(df, epoch_id):
+    # Get CPU and memory usage
+    cpu_usage, memory_usage = get_system_usage()
+    
     # Apply transformations to the DataFrame
     transformed_df = pipeline.transform(df)
     
@@ -55,8 +66,12 @@ def process_batch(df, epoch_id):
     # Convert rawPrediction column to array
     transformed_df = transformed_df.withColumn("rawPredictionArray", vector_to_array("rawPrediction"))
     
+    # Add CPU and memory usage columns
+    transformed_df = transformed_df.withColumn("cpu_usage", lit(cpu_usage))
+    transformed_df = transformed_df.withColumn("memory_usage", lit(memory_usage))
+    
     # Write the transformed data to MongoDB
-    transformed_df.select("timestamp", "prediction", "TweetContent", "rawPredictionArray").write \
+    transformed_df.select("timestamp", "prediction", "TweetContent", "rawPredictionArray", "cpu_usage", "memory_usage").write \
         .format("com.mongodb.spark.sql.DefaultSource") \
         .mode("append") \
         .option("uri", "mongodb://admin:1234@mongodb:27017") \

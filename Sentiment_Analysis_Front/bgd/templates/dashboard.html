@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <script type="text/javascript" src="{% static 'script.js' %}"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js" integrity="sha512-Wt1bJGtlnMtGP0dqNFH1xlkLBNpEodaiQ8ZN5JLA5wpc1sUlk/O5uuOMNgvzddzkpvZ9GLyYNa8w2s7rqiTk5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <title>Sentiment Analysis</title> <link rel="icon" type="image/png" href="{% static 'images/a3.png' %}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-custom navbar-mainbg">
+        <a class="navbar-brand navbar-logo" href="https://aws.amazon.com/what-is/sentiment-analysis/#:~:text=Sentiment%20analysis%20is%20the%20process,social%20media%20comments%2C%20and%20reviews.">
+            <img src="{% static 'images/a2.png' %}" alt="Logo" class="logo-image" width="25px" height="25px"> <!-- Smaller logo image -->
+            <span class="logo-text" style="font-family: 'Times New Roman', Times, serif; margin-left:10px">Sentiment Analysis</span> <!-- Text only -->
+        </a>
+        <button class="navbar-toggler" type="button" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="fas fa-bars text-white"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ml-auto">
+                <div class="hori-selector"><div class="left"></div><div class="right"></div></div>
+                <li class="nav-item active">
+                    <a class="nav-link" href="/dashboard"><i class="fas fa-tachometer-alt"></i>Dashboard</a>
+                </li>
+                <li class="nav-item ">
+                    <a class="nav-link" href="/architecture"><i class="far fa-address-book"></i>Architecture</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/data"><i class="far fa-clone"></i>Data</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/testing"><i class="far fa-calendar-alt"></i>Testing</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/models"><i class="far fa-chart-bar"></i>Models</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/team"><i class="far fa-copy"></i>Team</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="homepage">
+        <h1 class="homepagetext">Prédiction de sentiments en temps réel des flux de données de réseau socialtesst </h1>
+        {% comment %} <img src="data:image/png;base64,{{ graphic }}" /> {% endcomment %}
+        <div class="container-fluid">
+            <div class="row w-100 mg-2">
+                <div class="col- p-4 rounded-lg">
+                    <canvas id="bar-chart" width="400" height="400"></canvas>
+                </div>
+                <div class="col- p-4">
+                    <canvas id="pie-chart" width="400" height="400"></canvas>
+                </div>
+                <div class="col- p-4">
+                    <canvas id="scatter-chart" width="400" height="400"></canvas>
+                </div>
+                <div class="col- p-4">
+                    <canvas id="line-chart" width="400" height="400"></canvas>
+                </div>
+                
+            </div>
+        </div>
+
+    </div>
+
+</body>
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Function to fetch data from the server and update plots
+        function updatePlots() {
+            $.ajax({
+                url: '/dashboard',  // URL to your Django view
+                type: 'GET',
+                success: function(data) {
+
+                    //console.log($(data).find("#pie-chart").attr('src'))
+                    // Update pie chart
+                    $('#pie-chart').attr('src', $(data).find("#pie-chart").attr('src'));
+
+                    // Update line plot
+                    $('#line-chart').attr('src', $(data).find("#line-chart").attr('src'));
+
+                    // Call updatePlots function recursively after a certain interval
+                    setTimeout(updatePlots, 5000);  // Update every 5 seconds (adjust as needed)
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching data:', error);
+                }
+            });
+        }
+
+        // Initial call to updatePlots function
+        updatePlots();
+    });
+</script>
+
+<script>
+
+
+    var timestamps = {{ timestamps|safe  }}
+    var predictions = {{ predictions|safe  }}
+    var all_prediction = {{ all_prediction }}
+    var confidence = {{ confidence }}
+    var cpu_usage = {{ cpu_usage }}
+    var memory_usage = {{ memory_usage }}
+    {% comment %} var total_prediction = {{ total_prediction|safe }} {% endcomment %}
+    
+    // Function to count occurrences of each class
+    function countClasses(predictions) {
+        var counts = {};
+        predictions.forEach(function(prediction) {
+            counts[prediction] = (counts[prediction] || 0) + 1;
+        });
+        return counts;
+    }
+
+    // Call the function to get the counts of each class
+    var classCounts = countClasses(all_prediction);
+
+    // Extract class labels and counts for the chart data
+    var classLabels = Object.keys(classCounts);
+    var classValues = Object.values(classCounts);
+
+    var data_confidence = confidence.map(function(y, index) {
+        return { x: index, y: y };
+    });
+
+    console.log(memory_usage)
+    console.log(cpu_usage)
+
+    var ctx1 = document.getElementById('bar-chart').getContext('2d');
+    var barChart = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: timestamps,
+            datasets: [{
+                label: 'Prediction values over time',
+                data: predictions,
+                backgroundColor: 'rgba(23, 101, 50, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    var ctx2 = document.getElementById('pie-chart').getContext('2d');
+    var pieChart = new Chart(ctx2, {
+        type: 'pie',
+        data: {
+            labels: ['class : 0', 'class : 1', 'class : 2', 'class : 3'], // Add labels here
+            datasets: [{
+                data: classValues,
+                backgroundColor: [
+                    'rgb(255, 99, 132)',
+                    'rgb(54, 162, 235)',
+                    'rgb(255, 205, 86)',
+                    'rgb(0, 200, 86)'
+                ],
+            }]
+        },
+        options: {
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        var label = context.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += Math.round(context.parsed * 100) / 100 + '%';
+                        return label;
+                    }
+                }
+            }
+        }
+    }
+    });
+
+
+    var ctx3 = document.getElementById('scatter-chart').getContext('2d');
+    var scatterChart = new Chart(ctx3, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Distribution of Confidence',
+                data: data_confidence,
+                backgroundColor: 'rgba(23, 101, 50, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    
+                    beginAtZero: false
+                },
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+
+    var ctx4 = document.getElementById('line-chart').getContext('2d');
+    new Chart(ctx4, {
+        type: "line",
+        data: {
+            labels: timestamps,
+            datasets: [{
+                label: 'Memory Usage',
+                backgroundColor: "rgba(54, 162, 235, 0.5)",
+                borderColor: "rgba(54, 162, 235, 1)",
+                data: memory_usage // Assuming memory_usage is your array of memory usage data
+            },
+            {
+                label: 'CPU Usage',
+                backgroundColor: "rgba(255, 99, 132, 0.5)",
+                borderColor: "rgba(255, 99, 132, 1)",
+                data: cpu_usage // Assuming cpu_usage is your array of CPU usage data
+            }]
+        },
+        options: {
+            legend: {
+        display: false
+    },
+            scales: {
+                xAxes: [{
+                    type: 'time', // Assuming timestamps are date/time values
+                    time: {
+                        unit: 'day' // Adjust the time unit as needed
+                    },
+                    beginAtZero: false
+                }],
+                yAxes: [{
+                    beginAtZero: false
+                }]
+            },
+            legend: {
+                display: false // Hide the dataset labels
+            }
+        }
+    });
+
+
+
+
+
+</script>
+
+</html>

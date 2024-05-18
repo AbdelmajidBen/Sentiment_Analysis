@@ -1,0 +1,11 @@
+FROM python:3.8-slim
+
+WORKDIR /app
+
+COPY Kafka_Streaming/producer/producer.py .
+COPY Kafka_Streaming/producer/twitter_validation.csv .
+RUN pip install kafka-python
+
+
+
+CMD [ "python", "producer.py" ]

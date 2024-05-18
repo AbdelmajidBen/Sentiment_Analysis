@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.CountVectorizerModel","timestamp":1714683190222,"sparkVersion":"3.5.1","uid":"CountVectorizer_8005ad8a917c","paramMap":{"inputCol":"filtered_tweet","outputCol":"raw_features"},"defaultParamMap":{"maxDF":9.223372036854776E18,"binary":false,"vocabSize":262144,"minDF":1.0,"minTF":1.0,"outputCol":"CountVectorizer_8005ad8a917c__output"}}

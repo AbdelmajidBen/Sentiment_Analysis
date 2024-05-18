@@ -1,0 +1,223 @@
+version: '3'
+services:
+
+#
+#   1 cluster with 3 brokers each brockers have 2 partions
+#
+#
+  kafka1:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka1
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+      #KAFKA_CREATE_TOPICS: "twitter"  # Specify the topic: partitions: replication factor
+    depends_on:
+      - zookeeper
+    networks:
+      - spark_kafka
+    healthcheck:
+      test: "nc -z localhost 9092"  # Check if the Kafka port is open
+      interval: 10s  # Check every 10 seconds
+      timeout: 10s   # Timeout after 10 seconds
+      retries: 5     # Retry 5 times before considering the service unhealthy
+
+  kafka2:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-broker-2
+    ports:
+      - "9093:9092"  # Change the host port to avoid conflict
+    environment:
+      KAFKA_BROKER_ID: 2  # Change the broker ID
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093  # Adjust the advertised listener
+      #KAFKA_CREATE_TOPICS: "twitter"
+    depends_on:
+      - zookeeper
+    networks:
+      - spark_kafka
+    healthcheck:
+      test: "nc -z localhost 9093"  # Check if the Kafka port is open
+      interval: 10s  # Check every 10 seconds
+      timeout: 10s   # Timeout after 10 seconds
+      retries: 5     # Retry 5 times before considering the service unhealthy
+      
+
+  kafka3:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-broker-3
+    ports:
+      - "9094:9092"  # Change the host port to avoid conflict
+    environment:
+      KAFKA_BROKER_ID: 3  # Change the broker ID
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9094  # Adjust the advertised listener
+      # KAFKA_CREATE_TOPICS: "twitter"
+    depends_on:
+      - zookeeper
+    networks:
+      - spark_kafka
+    healthcheck:
+      test: "nc -z localhost 9094"  # Check if the Kafka port is open
+      interval: 10s  # Check every 10 seconds
+      timeout: 10s   # Timeout after 10 seconds
+      retries: 5     # Retry 5 times before considering the service unhealthy
+    
+
+#
+# 3 service to create topics
+#
+#
+
+  init-kafka1:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      kafka1:
+        condition: service_healthy
+    networks:
+      - spark_kafka
+    command: >
+      bash -c "echo 'Creation TOPICS : ' &&/usr/bin/kafka-topics --create --topic twitter --partitions 2 --replication-factor 3 --if-not-exists --bootstrap-server kafka1:9092"
+
+
+  init-kafka2:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      kafka2:
+        condition: service_healthy
+    networks:
+      - spark_kafka
+    command: >
+      bash -c "echo 'Creation TOPICS : ' && /usr/bin/kafka-topics --create --topic twitter --partitions 2 --replication-factor 3 --if-not-exists --bootstrap-server kafka2:9093"
+
+  init-kafka3:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      kafka3:
+        condition: service_healthy
+    networks:
+      - spark_kafka
+    command: >
+      bash -c "echo 'Creation TOPICS : ' && /usr/bin/kafka-topics --create --topic twitter --partitions 2 --replication-factor 3 --if-not-exists --bootstrap-server kafka3:9094"
+
+
+
+  zookeeper:
+    image: zookeeper:3.7.2
+    environment: 
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - spark_kafka
+
+
+
+# Producers that send twitter_training.csv to kafka cluster
+
+#
+  producer:
+    build:
+      context: .
+      dockerfile: Kafka_Streaming/producer/Dockerfile1
+    networks:
+      - spark_kafka
+    depends_on:
+      - init-kafka1
+      - init-kafka2
+      - init-kafka3
+    volumes:
+      - zookeeper_data:/data
+
+#
+# Spark consumer
+#
+#
+
+  spark:
+    build:
+      context: .
+      dockerfile: trainement/Dockerfile
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    networks:
+      - spark_kafka
+    depends_on:
+      - init-kafka1
+      - init-kafka2
+      - init-kafka3
+
+      
+  spark-worker:
+    image: docker.io/bitnami/spark:3.5
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    depends_on:
+      - spark
+    volumes:
+      - ./consumer/consumer.py:/root/consumer.py
+    networks:
+      - spark_kafka
+
+
+#
+# Mongodb Service
+#
+  mongodb:
+    image: mongo:latest
+    hostname: mongodb
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo/data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: 1234
+      MONGO_INITDB_DATABASE: Twitter
+    networks:
+      - spark_kafka
+
+
+  # mongo-express:
+  #   image: mongo-express
+  #   container_name: mongo-express
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+  #     - ME_CONFIG_MONGODB_ADMINPASSWORD=1234
+  #     - ME_CONFIG_MONGODB_URL=mongodb://root:example@mongo:27017/
+  #   networks:
+  #     - spark_kafka
+  #   depends_on:
+  #     - mongodb
+
+
+#
+# Network
+#
+ 
+networks:
+  spark_kafka:
+    driver: bridge
+
+volumes:
+  zookeeper_data:
+  mongodb_data1:
